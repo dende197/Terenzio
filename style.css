@@ -1,0 +1,1163 @@
+/* ═══════════════════════════════════════════
+   TERENZIO — Design System & Animazioni
+   Per LIM (1920×1080+) — Grande schermo
+   ═══════════════════════════════════════════ */
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --gold: #c9a84c;
+    --gold-light: #dabb6b;
+    --gold-bright: #f0d68a;
+    --gold-dark: #8a6d2b;
+    --ivory: #f4e9d4;
+    --parchment: #e8d5b7;
+    --brown-deep: #3d2b1f;
+    --brown-dark: #2a1a0e;
+    --black: #0a0a0a;
+    --black-warm: #1a1410;
+    --red-roman: #8b3a3a;
+    --green-olive: #6b7a3d;
+    --font-display: 'Cinzel', 'Georgia', serif;
+    --font-body: 'Cormorant Garamond', 'Georgia', serif;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--black);
+    color: var(--ivory);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.7;
+    cursor: default;
+}
+
+/* ── Canvas Particelle ── */
+#particles-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+}
+
+/* ── Fasi (Sections) ── */
+.phase {
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1.5s ease, visibility 0s 1.5s;
+    z-index: 1;
+}
+
+.phase.active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 1.5s ease, visibility 0s 0s;
+    z-index: 10;
+}
+
+/* ═══════════════════════════════════════════
+   FASE 1 — INTRO SCREEN
+   ═══════════════════════════════════════════ */
+.intro-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 30%, rgba(201, 168, 76, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(201, 168, 76, 0.05) 0%, transparent 40%),
+        var(--black);
+    z-index: 0;
+}
+
+.intro-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('assets/images/columns_bg.png') center/cover no-repeat;
+    opacity: 0.06;
+    filter: grayscale(50%) sepia(30%);
+}
+
+.intro-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Sigillo / Maschera */
+.seal-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin-bottom: 2rem;
+    animation: float 4s ease-in-out infinite;
+}
+
+.seal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 30px rgba(201, 168, 76, 0.4));
+    animation: pulse-glow 3s ease-in-out infinite alternate;
+    background: radial-gradient(circle, rgba(15, 12, 8, 0.95) 40%, transparent 70%);
+    border-radius: 50%;
+    padding: 10px;
+}
+
+.seal-glow {
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201, 168, 76, 0.15) 0%, transparent 70%);
+    animation: pulse-glow 3s ease-in-out infinite alternate;
+}
+
+/* Titolo */
+.intro-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1em;
+    margin-bottom: 1rem;
+}
+
+.title-line {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 2.5rem;
+    letter-spacing: 0.5em;
+    color: var(--ivory);
+    opacity: 0;
+    animation: fade-in-up 1s ease forwards;
+}
+
+.title-line:nth-child(1) {
+    animation-delay: 0.3s;
+}
+
+.title-line:nth-child(2) {
+    animation-delay: 0.6s;
+}
+
+.title-line:nth-child(3) {
+    animation-delay: 0.9s;
+}
+
+.title-line.accent {
+    font-weight: 700;
+    font-size: 4.5rem;
+    letter-spacing: 0.3em;
+    background: linear-gradient(135deg, var(--gold), var(--gold-bright), var(--gold));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fade-in-up 1s ease forwards, shimmer 4s ease-in-out infinite;
+    animation-delay: 0.6s, 0s;
+    filter: drop-shadow(0 2px 10px rgba(201, 168, 76, 0.3));
+}
+
+.title-line.small {
+    font-size: 2rem;
+    letter-spacing: 0.8em;
+    color: var(--gold-dark);
+}
+
+.intro-subtitle {
+    font-family: var(--font-body);
+    font-size: 1.5rem;
+    font-style: italic;
+    color: rgba(244, 233, 212, 0.6);
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fade-in 1.5s ease 1.2s forwards;
+}
+
+/* Linea Meander */
+.meander-line {
+    width: 300px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent);
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fade-in 1.5s ease 1.4s forwards;
+}
+
+/* Pulsante Start */
+.btn-roman {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.2rem 3.5rem;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    color: var(--gold-bright);
+    background: transparent;
+    border: 2px solid var(--gold);
+    cursor: pointer;
+    overflow: hidden;
+    opacity: 0;
+    animation: fade-in-up 1s ease 1.6s forwards;
+    transition: all 0.4s ease;
+}
+
+.btn-roman::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.1), rgba(201, 168, 76, 0.05));
+    transition: all 0.4s ease;
+}
+
+.btn-roman:hover {
+    border-color: var(--gold-bright);
+    transform: scale(1.05);
+    box-shadow: 0 0 40px rgba(201, 168, 76, 0.3), inset 0 0 40px rgba(201, 168, 76, 0.1);
+}
+
+.btn-roman:hover::before {
+    background: linear-gradient(135deg, rgba(201, 168, 76, 0.2), rgba(201, 168, 76, 0.1));
+}
+
+.btn-text {
+    position: relative;
+    z-index: 1;
+}
+
+.btn-ornament {
+    position: relative;
+    z-index: 1;
+    font-size: 1.4rem;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+    font-family: serif;
+}
+
+.btn-ornament.left {
+    margin-right: 1rem;
+    transform: scaleX(-1);
+}
+
+.btn-ornament.right {
+    margin-left: 1rem;
+}
+
+.btn-roman:hover .btn-ornament {
+    opacity: 1;
+}
+
+.intro-hint {
+    font-size: 0.9rem;
+    color: rgba(244, 233, 212, 0.3);
+    margin-top: 1.5rem;
+    opacity: 0;
+    animation: fade-in 2s ease 2s forwards, pulse-subtle 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════
+   FASE 2A — VIDEO PORTALE
+   ═══════════════════════════════════════════ */
+.portal-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 50%, rgba(201, 168, 76, 0.03) 0%, transparent 50%),
+        var(--black);
+}
+
+.portal-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70vw;
+    max-width: 1100px;
+    aspect-ratio: 16/9;
+}
+
+/* Arco romano decorativo */
+.portal-arch {
+    position: absolute;
+    inset: -40px -50px -20px -50px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.arch-keystone {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 50px;
+    background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+    box-shadow: 0 5px 20px rgba(201, 168, 76, 0.4);
+}
+
+.arch-keystone::after {
+    content: 'SPQR';
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--brown-deep);
+    font-weight: 700;
+}
+
+.arch-column {
+    position: absolute;
+    bottom: 0;
+    width: 45px;
+    height: calc(100% - 10px);
+    background: linear-gradient(90deg,
+            rgba(201, 168, 76, 0.3),
+            rgba(201, 168, 76, 0.6),
+            rgba(201, 168, 76, 0.3));
+    border-radius: 4px 4px 0 0;
+}
+
+.arch-column.left {
+    left: 0;
+}
+
+.arch-column.right {
+    right: 0;
+}
+
+.arch-column::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -8px;
+    right: -8px;
+    height: 25px;
+    background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+    border-radius: 3px;
+}
+
+.arch-column::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 100%;
+    background: linear-gradient(180deg,
+            transparent,
+            rgba(255, 255, 255, 0.06),
+            transparent);
+}
+
+.arch-base {
+    position: absolute;
+    bottom: -15px;
+    width: 65px;
+    height: 20px;
+    background: linear-gradient(180deg, var(--gold-dark), #5a3e1b);
+    border-radius: 2px;
+}
+
+.arch-base.left {
+    left: -10px;
+}
+
+.arch-base.right {
+    right: -10px;
+}
+
+/* Video container */
+.video-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border: 3px solid var(--gold-dark);
+    box-shadow:
+        0 0 60px rgba(201, 168, 76, 0.15),
+        inset 0 0 60px rgba(0, 0, 0, 0.5);
+    background: var(--black);
+}
+
+#intro-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(10, 10, 10, 0.6) 100%);
+    pointer-events: none;
+}
+
+.portal-inscription {
+    position: absolute;
+    bottom: -55px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    letter-spacing: 0.4em;
+    color: var(--gold-dark);
+    white-space: nowrap;
+    opacity: 0.6;
+}
+
+.portal-ambient-text {
+    position: absolute;
+    bottom: 3%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-style: italic;
+    color: rgba(201, 168, 76, 0.3);
+    letter-spacing: 0.1em;
+    animation: pulse-subtle 4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════
+   FASE 2B — SCENA ARRIVO
+   ═══════════════════════════════════════════ */
+.arrival-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.arrival-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.7) saturate(1.1);
+}
+
+.arrival-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom,
+            rgba(10, 10, 10, 0.3) 0%,
+            rgba(10, 10, 10, 0.1) 30%,
+            rgba(10, 10, 10, 0.5) 60%,
+            rgba(10, 10, 10, 0.85) 100%);
+    z-index: 1;
+}
+
+.arrival-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    padding: 3rem 4rem 5rem;
+}
+
+/* Citazione */
+.quote-container {
+    text-align: center;
+    margin-bottom: 3rem;
+    max-width: 900px;
+    opacity: 0;
+    animation: fade-in-up 1.5s ease 0.5s forwards;
+}
+
+.quote-mark {
+    font-family: var(--font-display);
+    font-size: 5rem;
+    color: var(--gold);
+    line-height: 0.5;
+    opacity: 0.5;
+    margin-bottom: 0.5rem;
+}
+
+.quote-text {
+    font-family: var(--font-body);
+    font-size: 2.2rem;
+    font-style: italic;
+    color: var(--ivory);
+    line-height: 1.5;
+    min-height: 3.5rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.quote-translation {
+    font-family: var(--font-body);
+    font-size: 1.2rem;
+    color: rgba(244, 233, 212, 0.6);
+    margin-top: 0.8rem;
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+.quote-translation.visible {
+    opacity: 1;
+}
+
+.quote-author {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    color: var(--gold-dark);
+    margin-top: 1rem;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+
+.quote-author.visible {
+    opacity: 1;
+}
+
+/* Pulsanti Esplora */
+.arrival-buttons {
+    display: flex;
+    gap: 2rem;
+    opacity: 0;
+    animation: fade-in-up 1s ease 3.5s forwards;
+}
+
+.btn-explore {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1.5rem 2.5rem;
+    background: rgba(201, 168, 76, 0.08);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    color: var(--ivory);
+    cursor: pointer;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    min-width: 180px;
+}
+
+.btn-explore:hover {
+    background: rgba(201, 168, 76, 0.15);
+    border-color: var(--gold);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(201, 168, 76, 0.2);
+}
+
+.btn-explore-icon {
+    font-size: 2.5rem;
+}
+
+.btn-explore-label {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+}
+
+/* ═══════════════════════════════════════════
+   FASE 3 — SLIDES
+   ═══════════════════════════════════════════ */
+.slides-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(201, 168, 76, 0.04) 0%, transparent 50%),
+        linear-gradient(180deg, var(--black-warm) 0%, var(--black) 100%);
+}
+
+.slides-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('assets/images/columns_bg.png') center/cover no-repeat;
+    opacity: 0.04;
+    filter: grayscale(60%) sepia(20%);
+}
+
+/* Navigazione tabs */
+.slides-nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    z-index: 20;
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.8) 80%, transparent 100%);
+    padding: 1.5rem 2rem 2rem;
+}
+
+.nav-tab {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.15em;
+    color: rgba(244, 233, 212, 0.5);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 0.8rem 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-tab:hover {
+    color: var(--ivory);
+}
+
+.nav-tab.active {
+    color: var(--gold-bright);
+    border-bottom-color: var(--gold);
+}
+
+.nav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold-bright), transparent);
+    box-shadow: 0 0 10px rgba(201, 168, 76, 0.5);
+}
+
+.nav-tab.back-btn {
+    margin-left: 2rem;
+    color: rgba(201, 168, 76, 0.4);
+    font-size: 0.9rem;
+}
+
+.nav-tab.back-btn:hover {
+    color: var(--gold);
+}
+
+/* Slides */
+.slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease, visibility 0s 0.8s, transform 0.8s ease;
+    transform: translateY(20px);
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.8s ease, visibility 0s 0s, transform 0.8s ease;
+    transform: translateY(0);
+}
+
+.slide-inner {
+    width: 85%;
+    max-width: 1200px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-top: 5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dark) transparent;
+}
+
+.slide-inner::-webkit-scrollbar {
+    width: 6px;
+}
+
+.slide-inner::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.slide-inner::-webkit-scrollbar-thumb {
+    background: var(--gold-dark);
+    border-radius: 3px;
+}
+
+/* Card Pergamena */
+.parchment-card {
+    position: relative;
+    background:
+        linear-gradient(135deg, rgba(232, 213, 183, 0.06) 0%, rgba(244, 233, 212, 0.03) 100%);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+    padding: 3rem 4rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.card-divider {
+    display: block;
+    width: 60%;
+    max-width: 500px;
+    height: auto;
+    margin: 0 auto;
+    opacity: 0.3;
+    filter: brightness(0.8);
+}
+
+.card-divider.top {
+    margin-bottom: 2rem;
+}
+
+.card-divider.bottom {
+    margin-top: 2rem;
+}
+
+.slide-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--gold-bright);
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 20px rgba(201, 168, 76, 0.2);
+}
+
+.slide-intro {
+    text-align: center;
+    font-size: 1.15rem;
+    color: rgba(244, 233, 212, 0.7);
+    max-width: 800px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.8;
+}
+
+/* ── Timeline (La Vita) ── */
+.timeline {
+    position: relative;
+    padding-left: 3rem;
+    margin-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--gold), var(--gold-dark), transparent);
+}
+
+.timeline-item {
+    position: relative;
+    padding: 1.5rem 0 2.5rem 2rem;
+    opacity: 0;
+    animation: fade-in-left 0.8s ease forwards;
+}
+
+.timeline-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.timeline-item:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.timeline-item:nth-child(3) {
+    animation-delay: 0.5s;
+}
+
+.timeline-item:nth-child(4) {
+    animation-delay: 0.7s;
+}
+
+.timeline-item::before {
+    content: attr(data-year);
+    position: absolute;
+    left: -5rem;
+    top: 1.6rem;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -2.55rem;
+    top: 1.8rem;
+    width: 12px;
+    height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    border: 2px solid var(--black);
+    box-shadow: 0 0 10px rgba(201, 168, 76, 0.5);
+}
+
+.timeline-content h3 {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    color: var(--gold-light);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+}
+
+.timeline-content p {
+    font-size: 1.05rem;
+    color: rgba(244, 233, 212, 0.75);
+    line-height: 1.8;
+}
+
+/* ── Opere Grid ── */
+.opere-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.opera-card {
+    background: rgba(201, 168, 76, 0.04);
+    border: 1px solid rgba(201, 168, 76, 0.12);
+    padding: 1.8rem;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.opera-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-dark));
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.opera-card:hover {
+    background: rgba(201, 168, 76, 0.08);
+    border-color: rgba(201, 168, 76, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.opera-card:hover::before {
+    opacity: 1;
+}
+
+.opera-year {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    color: var(--gold-dark);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.5rem;
+}
+
+.opera-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: var(--gold-light);
+    margin-bottom: 0.6rem;
+}
+
+.opera-desc {
+    font-size: 0.95rem;
+    color: rgba(244, 233, 212, 0.65);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.opera-tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    padding: 0.25rem 0.8rem;
+    text-transform: uppercase;
+}
+
+/* ── Mondo (Il Mondo) ── */
+.mondo-sections {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.mondo-card {
+    background: rgba(201, 168, 76, 0.04);
+    border: 1px solid rgba(201, 168, 76, 0.1);
+    padding: 2rem;
+    transition: all 0.4s ease;
+}
+
+.mondo-card:hover {
+    background: rgba(201, 168, 76, 0.08);
+    border-color: rgba(201, 168, 76, 0.25);
+}
+
+.mondo-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.mondo-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    color: var(--gold-light);
+    margin-bottom: 0.8rem;
+    letter-spacing: 0.05em;
+}
+
+.mondo-card p {
+    font-size: 1rem;
+    color: rgba(244, 233, 212, 0.7);
+    line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════
+   AUDIO CONTROLS
+   ═══════════════════════════════════════════ */
+.audio-controls {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.6rem 1.2rem;
+    background: rgba(10, 10, 10, 0.7);
+    border: 1px solid rgba(201, 168, 76, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    transition: opacity 0.5s ease;
+}
+
+.audio-controls.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.btn-audio {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--gold);
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    transition: color 0.3s;
+}
+
+.btn-audio:hover {
+    color: var(--gold-bright);
+}
+
+.audio-icon {
+    font-size: 1.2rem;
+}
+
+.btn-audio.muted .audio-icon {
+    opacity: 0.4;
+}
+
+.volume-slider {
+    width: 80px;
+    height: 3px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(201, 168, 76, 0.3);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════
+   TRANSITION OVERLAY
+   ═══════════════════════════════════════════ */
+.transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--black);
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.5s ease;
+}
+
+.transition-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ═══════════════════════════════════════════
+   ANIMAZIONI
+   ═══════════════════════════════════════════ */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse-glow {
+    from {
+        filter: drop-shadow(0 0 20px rgba(201, 168, 76, 0.3));
+    }
+
+    to {
+        filter: drop-shadow(0 0 40px rgba(201, 168, 76, 0.6));
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes pulse-subtle {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — LIM OTTIMIZZAZIONE
+   ═══════════════════════════════════════════ */
+@media (min-width: 1920px) {
+    html {
+        font-size: 20px;
+    }
+
+    .title-line.accent {
+        font-size: 5rem;
+    }
+
+    .seal-container {
+        width: 200px;
+        height: 200px;
+    }
+}
+
+@media (min-width: 2560px) {
+    html {
+        font-size: 24px;
+    }
+
+    .title-line.accent {
+        font-size: 5.5rem;
+    }
+}
+
+@media (max-height: 900px) {
+    .seal-container {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 1rem;
+    }
+
+    .title-line {
+        font-size: 2rem;
+    }
+
+    .title-line.accent {
+        font-size: 3.5rem;
+    }
+
+    .intro-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-roman {
+        padding: 1rem 2.5rem;
+    }
+}

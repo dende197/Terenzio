@@ -1,0 +1,555 @@
+/* ═══════════════════════════════════════════
+   TERENZIO — Script Interattivo
+   Gestione fasi, particelle, audio, transizioni
+   ═══════════════════════════════════════════ */
+
+(function () {
+    'use strict';
+
+    // ═══════════════════════════════════════
+    // STATO GLOBALE
+    // ═══════════════════════════════════════
+    const state = {
+        currentPhase: 'intro',
+        audioPlaying: false,
+        audioContext: null,
+        gainNode: null,
+        oscillators: [],
+        particlesActive: true,
+    };
+
+    // ═══════════════════════════════════════
+    // ELEMENTI DOM
+    // ═══════════════════════════════════════
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    const els = {
+        introScreen: $('#intro-screen'),
+        videoPortal: $('#video-portal'),
+        arrivalScene: $('#arrival-scene'),
+        slidesContainer: $('#slides-container'),
+        btnStart: $('#btn-start'),
+        video: $('#intro-video'),
+        particlesCanvas: $('#particles-canvas'),
+        typewriterText: $('#typewriter-text'),
+        audioControls: $('#audio-controls'),
+        btnAudioToggle: $('#btn-audio-toggle'),
+        volumeSlider: $('#volume-slider'),
+        transitionOverlay: $('#transition-overlay'),
+        btnBackArrival: $('#btn-back-arrival'),
+        slidesNav: $('#slides-nav'),
+    };
+
+    // ═══════════════════════════════════════
+    // SISTEMA PARTICELLE DORATE
+    // ═══════════════════════════════════════
+    class ParticleSystem {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.particles = [];
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+        }
+
+        createParticle() {
+            return {
+                x: Math.random() * this.canvas.width,
+                y: this.canvas.height + 10,
+                size: Math.random() * 3 + 0.5,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: -(Math.random() * 1.5 + 0.3),
+                opacity: Math.random() * 0.5 + 0.1,
+                life: 0,
+                maxLife: Math.random() * 400 + 200,
+                hue: 38 + Math.random() * 15, // gold hue range
+            };
+        }
+
+        update() {
+            // Spawn nuove particelle
+            if (this.particles.length < 80) {
+                if (Math.random() < 0.3) {
+                    this.particles.push(this.createParticle());
+                }
+            }
+
+            // Update e draw
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+            this.particles = this.particles.filter(p => {
+                p.x += p.speedX + Math.sin(p.life * 0.02) * 0.3;
+                p.y += p.speedY;
+                p.life++;
+
+                const lifeFraction = p.life / p.maxLife;
+                const alpha = lifeFraction < 0.1
+                    ? p.opacity * (lifeFraction / 0.1)
+                    : p.opacity * (1 - lifeFraction);
+
+                if (alpha <= 0 || p.life >= p.maxLife) return false;
+
+                this.ctx.beginPath();
+                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                this.ctx.fillStyle = `hsla(${p.hue}, 60%, 60%, ${alpha})`;
+                this.ctx.fill();
+
+                // Glow effect
+                this.ctx.beginPath();
+                this.ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+                this.ctx.fillStyle = `hsla(${p.hue}, 60%, 60%, ${alpha * 0.15})`;
+                this.ctx.fill();
+
+                return true;
+            });
+        }
+
+        animate() {
+            if (!state.particlesActive) return;
+            this.update();
+            requestAnimationFrame(() => this.animate());
+        }
+
+        start() {
+            state.particlesActive = true;
+            this.animate();
+        }
+    }
+
+    // ═══════════════════════════════════════
+    // AUDIO AMBIENTE (Web Audio API)
+    // Lira greca sintetizzata
+    // ═══════════════════════════════════════
+    class AmbientAudio {
+        constructor() {
+            this.ctx = null;
+            this.masterGain = null;
+            this.isPlaying = false;
+            this.scheduledNotes = [];
+            this.nextNoteTime = 0;
+            this.currentScale = 0;
+        }
+
+        init() {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = 0.15;
+
+            // Riverbero con convolver simulato
+            const convolver = this.ctx.createConvolver();
+            const reverbLength = 3 * this.ctx.sampleRate;
+            const impulse = this.ctx.createBuffer(2, reverbLength, this.ctx.sampleRate);
+            for (let channel = 0; channel < 2; channel++) {
+                const data = impulse.getChannelData(channel);
+                for (let i = 0; i < reverbLength; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / reverbLength, 2.5);
+                }
+            }
+            convolver.buffer = impulse;
+
+            const reverbGain = this.ctx.createGain();
+            reverbGain.gain.value = 0.3;
+
+            this.masterGain.connect(this.ctx.destination);
+            this.masterGain.connect(convolver);
+            convolver.connect(reverbGain);
+            reverbGain.connect(this.ctx.destination);
+
+            state.audioContext = this.ctx;
+            state.gainNode = this.masterGain;
+        }
+
+        // Scala pentatonica greca (modo dorico)
+        getNote(index) {
+            const baseFreq = 220; // La3
+            const intervals = [0, 2, 3, 5, 7, 9, 10, 12, 14, 15, 17, 19];
+            const octave = Math.floor(index / intervals.length);
+            const note = intervals[index % intervals.length];
+            return baseFreq * Math.pow(2, (note + octave * 12) / 12);
+        }
+
+        playNote(freq, startTime, duration, volume = 0.12) {
+            if (!this.ctx) return;
+
+            const osc1 = this.ctx.createOscillator();
+            const osc2 = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            // Timbro simile alla lira (onda triangolare + leggera distorsione)
+            osc1.type = 'triangle';
+            osc1.frequency.value = freq;
+
+            osc2.type = 'sine';
+            osc2.frequency.value = freq * 2; // armonica ottava
+
+            const gain2 = this.ctx.createGain();
+            gain2.gain.value = 0.15;
+
+            osc1.connect(gain);
+            osc2.connect(gain2);
+            gain2.connect(gain);
+            gain.connect(this.masterGain);
+
+            // Inviluppo ADSR semplificato
+            const attackTime = 0.05;
+            const decayTime = duration * 0.3;
+            const sustainLevel = volume * 0.4;
+            const releaseTime = duration * 0.5;
+
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(volume, startTime + attackTime);
+            gain.gain.linearRampToValueAtTime(sustainLevel, startTime + attackTime + decayTime);
+            gain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+            osc1.start(startTime);
+            osc1.stop(startTime + duration + 0.1);
+            osc2.start(startTime);
+            osc2.stop(startTime + duration + 0.1);
+        }
+
+        // Pattern melodico ricorrente
+        playPattern() {
+            if (!this.isPlaying || !this.ctx) return;
+
+            const now = this.ctx.currentTime;
+            const tempo = 0.8; // secondi per beat
+
+            // Pattern melodici ispirati alla musica greca antica
+            const patterns = [
+                [0, 2, 4, 5, 4, 2, 0, -1],
+                [2, 4, 5, 7, 5, 4, 2, 0],
+                [5, 4, 2, 0, 2, 4, 5, 7],
+                [7, 5, 4, 2, 4, 5, 7, 9],
+                [0, 4, 7, 5, 4, 2, 0, 2],
+            ];
+
+            const pattern = patterns[this.currentScale % patterns.length];
+            this.currentScale++;
+
+            pattern.forEach((noteIdx, i) => {
+                const freq = this.getNote(noteIdx + 3);
+                const duration = tempo * (0.7 + Math.random() * 0.6);
+                const startTime = now + i * tempo;
+                this.playNote(freq, startTime, duration, 0.08 + Math.random() * 0.06);
+            });
+
+            // Drone di base (nota pedale)
+            const droneFreq = this.getNote(0);
+            const droneGain = this.ctx.createGain();
+            const droneOsc = this.ctx.createOscillator();
+            droneOsc.type = 'sine';
+            droneOsc.frequency.value = droneFreq / 2;
+            droneGain.gain.value = 0.03;
+            droneOsc.connect(droneGain);
+            droneGain.connect(this.masterGain);
+            droneOsc.start(now);
+            droneOsc.stop(now + pattern.length * tempo);
+
+            // Schedula il prossimo pattern
+            const patternDuration = pattern.length * tempo;
+            const pause = 1 + Math.random() * 2;
+            setTimeout(() => this.playPattern(), (patternDuration + pause) * 1000);
+        }
+
+        start() {
+            if (!this.ctx) this.init();
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+            this.isPlaying = true;
+            this.playPattern();
+        }
+
+        stop() {
+            this.isPlaying = false;
+        }
+
+        toggle() {
+            if (this.isPlaying) {
+                this.stop();
+            } else {
+                this.start();
+            }
+            return this.isPlaying;
+        }
+
+        setVolume(value) {
+            if (this.masterGain) {
+                this.masterGain.gain.value = value;
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════
+    // EFFETTO TYPEWRITER
+    // ═══════════════════════════════════════
+    class Typewriter {
+        constructor(element, text, speed = 60) {
+            this.element = element;
+            this.text = text;
+            this.speed = speed;
+            this.index = 0;
+        }
+
+        start() {
+            return new Promise((resolve) => {
+                const type = () => {
+                    if (this.index < this.text.length) {
+                        this.element.textContent += this.text[this.index];
+                        this.index++;
+                        setTimeout(type, this.speed);
+                    } else {
+                        resolve();
+                    }
+                };
+                type();
+            });
+        }
+    }
+
+    // ═══════════════════════════════════════
+    // GESTIONE TRANSIZIONI TRA FASI
+    // ═══════════════════════════════════════
+    function transitionTo(targetId, callback) {
+        const overlay = els.transitionOverlay;
+        overlay.classList.add('active');
+
+        setTimeout(() => {
+            // Nascondi tutte le fasi
+            $$('.phase').forEach(p => p.classList.remove('active'));
+
+            // Mostra la fase target
+            const target = $(`#${targetId}`);
+            if (target) {
+                target.classList.add('active');
+            }
+
+            // Callback
+            if (callback) callback();
+
+            // Dissolvi overlay
+            setTimeout(() => {
+                overlay.classList.remove('active');
+            }, 500);
+        }, 1500);
+    }
+
+    function fadeTransition(targetId, callback) {
+        // Transizione diretta senza overlay nero
+        $$('.phase').forEach(p => {
+            if (p.id !== targetId) p.classList.remove('active');
+        });
+        const target = $(`#${targetId}`);
+        if (target) target.classList.add('active');
+        if (callback) setTimeout(callback, 500);
+    }
+
+    // ═══════════════════════════════════════
+    // GESTIONE VIDEO
+    // ═══════════════════════════════════════
+    function startVideo() {
+        transitionTo('video-portal', () => {
+            state.currentPhase = 'video';
+            els.video.play().catch(err => {
+                console.warn('Video autoplay blocked:', err);
+                // Fallback: mostra un pulsante play
+                els.video.controls = true;
+            });
+        });
+
+        // Show audio controls
+        els.audioControls.classList.remove('hidden');
+    }
+
+    function onVideoEnd() {
+        transitionTo('arrival-scene', () => {
+            state.currentPhase = 'arrival';
+            startArrivalSequence();
+        });
+    }
+
+    // ═══════════════════════════════════════
+    // SEQUENZA ARRIVO
+    // ═══════════════════════════════════════
+    async function startArrivalSequence() {
+        // Typewriter per la citazione
+        const quoteText = 'Homo sum, humani nihil a me alienum puto.';
+        const typewriter = new Typewriter(els.typewriterText, quoteText, 70);
+        await typewriter.start();
+
+        // Mostra traduzione dopo il typewriter
+        await delay(800);
+        const translation = $('.quote-translation');
+        translation.textContent = '« Sono un essere umano, nulla di ciò che è umano mi è estraneo. »';
+        translation.classList.add('visible');
+
+        // Mostra autore
+        await delay(600);
+        $('.quote-author').classList.add('visible');
+    }
+
+    // ═══════════════════════════════════════
+    // NAVIGAZIONE SLIDES
+    // ═══════════════════════════════════════
+    function showSlide(slideId) {
+        $$('.slide').forEach(s => s.classList.remove('active'));
+        $$('.nav-tab').forEach(t => t.classList.remove('active'));
+
+        const targetSlide = $(`#${slideId}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            // Re-trigger timeline animations
+            targetSlide.querySelectorAll('.timeline-item').forEach((item, i) => {
+                item.style.animation = 'none';
+                item.offsetHeight; // trigger reflow
+                item.style.animation = `fade-in-left 0.8s ease ${i * 0.2}s forwards`;
+            });
+        }
+
+        const activeTab = $(`.nav-tab[data-slide="${slideId}"]`);
+        if (activeTab) activeTab.classList.add('active');
+    }
+
+    function goToSlides(slideId) {
+        if (state.currentPhase === 'slides') {
+            showSlide(slideId);
+            return;
+        }
+
+        transitionTo('slides-container', () => {
+            state.currentPhase = 'slides';
+            showSlide(slideId || 'slide-vita');
+        });
+    }
+
+    function goBackToArrival() {
+        transitionTo('arrival-scene', () => {
+            state.currentPhase = 'arrival';
+        });
+    }
+
+    // ═══════════════════════════════════════
+    // UTILITY
+    // ═══════════════════════════════════════
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ═══════════════════════════════════════
+    // INIZIALIZZAZIONE
+    // ═══════════════════════════════════════
+    function init() {
+        // Particelle
+        const particles = new ParticleSystem(els.particlesCanvas);
+        particles.start();
+
+        // Audio
+        const audio = new AmbientAudio();
+
+        // ── Event: Pulsante Start ──
+        els.btnStart.addEventListener('click', () => {
+            // Avvia audio
+            audio.start();
+            state.audioPlaying = true;
+            startVideo();
+        });
+
+        // ── Event: Video terminato ──
+        els.video.addEventListener('ended', onVideoEnd);
+
+        // ── Event: Skip video (click) ──
+        els.video.addEventListener('click', () => {
+            if (els.video.currentTime > 2) {
+                els.video.pause();
+                onVideoEnd();
+            }
+        });
+
+        // ── Event: Pulsanti Esplora (arrivo → slides) ──
+        $$('.btn-explore').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.target;
+                goToSlides(target);
+            });
+        });
+
+        // ── Event: Navigazione tabs slides ──
+        $$('.nav-tab[data-slide]').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.slide;
+                showSlide(target);
+            });
+        });
+
+        // ── Event: Torna indietro ──
+        els.btnBackArrival.addEventListener('click', goBackToArrival);
+
+        // ── Event: Toggle Audio ──
+        els.btnAudioToggle.addEventListener('click', () => {
+            const playing = audio.toggle();
+            state.audioPlaying = playing;
+            els.btnAudioToggle.classList.toggle('muted', !playing);
+        });
+
+        // ── Event: Volume Slider ──
+        els.volumeSlider.addEventListener('input', (e) => {
+            const value = e.target.value / 100;
+            audio.setVolume(value * 0.3); // max 30%
+        });
+
+        // ── Keyboard shortcuts ──
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'Escape':
+                    if (state.currentPhase === 'slides') goBackToArrival();
+                    break;
+                case ' ':
+                    if (state.currentPhase === 'video') {
+                        e.preventDefault();
+                        els.video.pause();
+                        onVideoEnd();
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (state.currentPhase === 'slides') {
+                        const activeSlide = $('.slide.active');
+                        const next = activeSlide?.nextElementSibling;
+                        if (next && next.classList.contains('slide')) {
+                            showSlide(next.id);
+                        }
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (state.currentPhase === 'slides') {
+                        const activeSlide = $('.slide.active');
+                        const prev = activeSlide?.previousElementSibling;
+                        if (prev && prev.classList.contains('slide')) {
+                            showSlide(prev.id);
+                        }
+                    }
+                    break;
+                case 'm':
+                case 'M':
+                    const playing = audio.toggle();
+                    state.audioPlaying = playing;
+                    els.btnAudioToggle.classList.toggle('muted', !playing);
+                    break;
+            }
+        });
+
+        console.log('🏛️ Terenzio — Sito inizializzato');
+    }
+
+    // Avvia quando il DOM è pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
