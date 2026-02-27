@@ -38,6 +38,8 @@
         slidesNav: $('#slides-nav'),
         faceAnnotation: $('#face-annotation'),
         faceLabel: $('#face-label'),
+        interactiveScene: $('#interactive-scene'),
+        parallaxContent: $('#parallax-content')
     };
 
     // ═══════════════════════════════════════
@@ -266,13 +268,12 @@
     // ANIMAZIONE FACCIA
     // ═══════════════════════════════════════
     function animateFaceAnnotation() {
-        // Mostra il container
+        if (!els.faceAnnotation) return;
         els.faceAnnotation.classList.add('visible');
 
-        // Mostra la label con nome e link
         setTimeout(() => {
-            els.faceLabel.classList.add('visible');
-        }, 600);
+            if (els.faceLabel) els.faceLabel.classList.add('visible');
+        }, 1500); // Delayed slightly as the text animations take time
     }
 
     // ═══════════════════════════════════════
@@ -476,6 +477,28 @@
             const value = e.target.value / 100;
             audio.setVolume(value * 0.3);
         });
+
+        // ── Event: Mouse Parallax Effect on Arrival Scene ──
+        if (els.interactiveScene && els.parallaxContent) {
+            els.interactiveScene.addEventListener('mousemove', (e) => {
+                const rect = els.interactiveScene.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+
+                // 3D effect calculation
+                const rotateX = (y / rect.height) * -6; // degrees
+                const rotateY = (x / rect.width) * 6;
+
+                els.parallaxContent.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+
+            els.interactiveScene.addEventListener('mouseleave', () => {
+                els.parallaxContent.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+            });
+
+            // Initial state
+            els.parallaxContent.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+        }
 
         // ── Keyboard shortcuts ──
         document.addEventListener('keydown', (e) => {

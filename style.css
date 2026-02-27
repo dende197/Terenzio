@@ -357,52 +357,113 @@ body::after {
     max-width: 1200px;
     aspect-ratio: 16/10;
     /* Un po' più alta per dare spazio al testo/citazioni interattive */
-    background: #000;
+    background: radial-gradient(circle at center, #2e0e0a 0%, #000 70%);
     border: 3px solid var(--pompeian-red);
     box-shadow:
         0 0 0 6px var(--bg),
         0 0 0 8px var(--gold-dim),
-        0 30px 60px rgba(0, 0, 0, 0.95);
+        0 30px 60px rgba(0, 0, 0, 0.95),
+        inset 0 0 100px rgba(0, 0, 0, 0.8);
     border-radius: 4px;
     overflow: hidden;
     animation: floatFrame 8s ease-in-out infinite, frameGlow 5s ease-in-out infinite alternate;
     z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1000px;
 }
 
-.scene-frame .arrival-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.75) saturate(0.9);
-}
-
-.scene-frame .scene-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom,
-            rgba(17, 17, 16, 0.15) 0%,
-            rgba(17, 17, 16, 0.05) 40%,
-            rgba(17, 17, 16, 0.4) 70%,
-            rgba(17, 17, 16, 0.75) 100%);
-}
-
-/* ── Annotazione informativa della figura ── */
-.face-annotation {
-    position: absolute;
-    top: 35%;
-    left: 53.5%;
-    z-index: 5;
+/* Base per il contenuto parallax */
+.cinematic-arrival-content {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
+    padding: 3rem;
+    transition: transform 0.1s ease-out;
+    position: relative;
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+}
+
+.arrival-year {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--gold-dim);
+    letter-spacing: 0.4em;
+    margin-top: 10%;
+    opacity: 0;
+    transform: translateY(-20px);
+    animation: fade-in-up 1.5s ease 0.6s forwards;
+}
+
+.arrival-heading {
+    font-family: var(--font-display);
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    letter-spacing: 0.1em;
+    margin: 1rem 0;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    transform: scale(0.95);
+    animation: cinematic-zoom 2s cubic-bezier(0.2, 0.8, 0.2, 1) 1.2s forwards;
+}
+
+.arrival-divider {
+    width: 150px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--pompeian-red), transparent);
+    margin: 1.5rem 0;
+    opacity: 0;
+    animation: fade-in 1.5s ease 2s forwards;
+}
+
+.arrival-description {
+    font-size: 1.6rem;
+    color: var(--ivory-soft);
+    font-style: italic;
+    max-width: 80%;
+    line-height: 1.6;
+    opacity: 0;
+    animation: fade-in-up 1.5s ease 2.5s forwards;
+}
+
+@keyframes cinematic-zoom {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+        filter: blur(10px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0);
+    }
+}
+
+/* ── Annotazione informativa della figura (Ristrutturata per la tipografia) ── */
+.face-annotation {
+    position: absolute;
+    bottom: 5%;
+    right: 5%;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
     gap: 1rem;
     opacity: 0;
     transition: opacity 0.8s ease;
-    padding: 1.5rem;
-    background: rgba(28, 24, 21, 0.85);
-    /* Sfondo scuro per maggiore leggibilità */
-    border-left: 3px solid var(--pompeian-red);
-    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.5);
+    padding: 1.5rem 2rem;
+    background: rgba(15, 12, 10, 0.9);
+    border-right: 4px solid var(--pompeian-red);
+    border-left: none;
+    backdrop-filter: blur(10px);
+    box-shadow: -5px 10px 30px rgba(0, 0, 0, 0.8);
 }
 
 .face-annotation.visible {
@@ -517,12 +578,13 @@ body::after {
 
 .quote-author {
     font-family: var(--font-display);
-    font-size: 0.8rem;
-    letter-spacing: 0.12em;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
     color: var(--gold-dim);
-    margin-top: 0.6rem;
+    margin-top: 0.8rem;
     opacity: 0;
     transition: opacity 0.8s ease;
+    text-transform: uppercase;
 }
 
 .quote-author.visible {

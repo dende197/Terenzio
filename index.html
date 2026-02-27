@@ -62,20 +62,25 @@
     <section id="arrival-scene" class="phase">
         <div class="arrival-bg"></div>
 
-        <!-- Frame immagine centrato, non fullscreen -->
-        <div class="scene-frame">
-            <img src="Gemini_Generated_Image_11ctqr11ctqr11ct.png" alt="Terenzio al mercato" class="arrival-image">
-            <div class="scene-overlay"></div>
+        <!-- Scena di arrivo interattiva (tipografica, senza immagine statica) -->
+        <div class="scene-frame" id="interactive-scene">
+            <div class="cinematic-arrival-content" id="parallax-content">
+                <div class="arrival-year">180 a.C.</div>
+                <h2 class="arrival-heading">L'Arrivo a Roma</h2>
+                <div class="arrival-divider"></div>
+                <p class="arrival-description">Un giovane liberto dai confini dell'Impero è destinato a cambiare per
+                    sempre il teatro latino.</p>
 
-            <!-- Annotazione della figura (stile scolastico) -->
-            <div class="face-annotation scholastic" id="face-annotation">
-                <div class="face-label" id="face-label">
-                    <span class="face-name">Publio Terenzio Afro</span>
-                    <span class="face-subtitle">Commediografo • 185–159 a.C.</span>
-                    <div class="face-info-links">
-                        <button class="face-info-link" data-target="slide-vita">Vita</button>
-                        <button class="face-info-link" data-target="slide-opere">Opere</button>
-                        <button class="face-info-link" data-target="slide-mondo">Mondo</button>
+                <!-- Annotazione della figura integrata nella composizione tipografica -->
+                <div class="face-annotation scholastic" id="face-annotation">
+                    <div class="face-label" id="face-label">
+                        <span class="face-name">Publio Terenzio Afro</span>
+                        <span class="face-subtitle">Commediografo • 185–159 a.C.</span>
+                        <div class="face-info-links">
+                            <button class="face-info-link" data-target="slide-vita">Vita</button>
+                            <button class="face-info-link" data-target="slide-opere">Opere</button>
+                            <button class="face-info-link" data-target="slide-mondo">Mondo</button>
+                        </div>
                     </div>
                 </div>
             </div>
