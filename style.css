@@ -13,18 +13,21 @@
 }
 
 :root {
-    --gold: #b8a068;
-    --gold-light: #d4be82;
-    --gold-dim: #8a7548;
-    --ivory: #ece5d8;
-    --ivory-soft: rgba(236, 229, 216, 0.6);
-    --bg: #111110;
-    --bg-card: rgba(255, 255, 255, 0.03);
-    --border-subtle: rgba(184, 160, 104, 0.15);
-    --border-hover: rgba(184, 160, 104, 0.35);
+    --gold: #c9a367;
+    --gold-light: #e6cb9a;
+    --gold-dim: #8b6c38;
+    --ivory: #f2ebd9;
+    --ivory-soft: rgba(242, 235, 217, 0.7);
+    --bg: #1c1815;
+    --bg-card: rgba(20, 16, 14, 0.85);
+    /* Sfondo scuro per maggiore leggibilità */
+    --border-subtle: rgba(201, 163, 103, 0.25);
+    --border-hover: rgba(180, 50, 40, 0.6);
+    --pompeian-red: #8f2a20;
     --font-display: 'Cinzel', 'Georgia', serif;
     --font-body: 'Cormorant Garamond', 'Georgia', serif;
-    --radius: 6px;
+    --radius: 0px;
+    /* Rigoroso, scolastico */
 }
 
 html,
@@ -184,9 +187,9 @@ body {
 }
 
 .btn-roman:hover {
-    border-color: var(--gold);
-    color: var(--gold-light);
-    background: rgba(184, 160, 104, 0.06);
+    border-color: var(--pompeian-red);
+    color: var(--ivory);
+    background: rgba(143, 42, 32, 0.15);
 }
 
 .btn-text {
@@ -213,22 +216,17 @@ body {
 
 .portal-frame {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 68vw;
-    max-width: 1060px;
-    aspect-ratio: 16/9;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
 
-/* Video container — cornice sottile */
+/* Video container — senza cornice, a tutto schermo */
 .video-container {
     position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
     background: #000;
 }
 
@@ -268,18 +266,13 @@ body {
     z-index: 0;
 }
 
-/* Il frame dell'immagine — NON fullscreen */
+/* L'immagine a tutto schermo, stile scolastico */
 .scene-frame {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 62vw;
-    max-width: 1000px;
-    aspect-ratio: 16/10;
-    border-radius: var(--radius);
+    inset: 0;
+    width: 100%;
+    height: 100%;
     overflow: hidden;
-    border: 1px solid var(--border-subtle);
 }
 
 .scene-frame .arrival-image {
@@ -299,40 +292,27 @@ body {
             rgba(17, 17, 16, 0.75) 100%);
 }
 
-/* ── Annotazione faccia di Terenzio ── */
+/* ── Annotazione informativa della figura ── */
 .face-annotation {
     position: absolute;
     top: 35%;
     left: 53.5%;
     z-index: 5;
     display: flex;
-    align-items: center;
-    gap: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
     opacity: 0;
     transition: opacity 0.8s ease;
+    padding: 1.5rem;
+    background: rgba(28, 24, 21, 0.85);
+    /* Sfondo scuro per maggiore leggibilità */
+    border-left: 3px solid var(--pompeian-red);
+    box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .face-annotation.visible {
     opacity: 1;
-}
-
-.face-circle-svg {
-    width: 120px;
-    height: 120px;
-    flex-shrink: 0;
-}
-
-.face-circle-ring {
-    fill: none;
-    stroke: var(--gold);
-    stroke-width: 2;
-    stroke-dasharray: 340;
-    stroke-dashoffset: 340;
-    transition: stroke-dashoffset 2s ease;
-}
-
-.face-circle-ring.drawn {
-    stroke-dashoffset: 0;
 }
 
 .face-label {
@@ -355,7 +335,6 @@ body {
     font-weight: 600;
     color: var(--ivory);
     letter-spacing: 0.1em;
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
     white-space: nowrap;
 }
 
@@ -364,7 +343,6 @@ body {
     font-size: 0.95rem;
     font-style: italic;
     color: var(--ivory-soft);
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
 }
 
 .face-info-links {
@@ -388,9 +366,9 @@ body {
 }
 
 .face-info-link:hover {
-    border-color: var(--gold);
-    background: rgba(184, 160, 104, 0.15);
-    color: var(--gold-light);
+    border-color: var(--pompeian-red);
+    background: rgba(143, 42, 32, 0.25);
+    color: var(--ivory);
 }
 
 /* ── Citazione sotto il frame ── */
@@ -499,7 +477,7 @@ body {
 
 .nav-tab.active {
     color: var(--gold);
-    border-bottom-color: var(--gold-dim);
+    border-bottom-color: var(--pompeian-red);
 }
 
 .nav-tab.back-btn {
@@ -555,13 +533,17 @@ body {
     border-radius: 2px;
 }
 
-/* Card contenuto */
+/* Card contenuto — Stile più accademico e strutturato */
 .content-card {
     position: relative;
     background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
+    border-top: 3px solid var(--pompeian-red);
+    border-bottom: 1px solid var(--border-subtle);
+    border-left: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
     border-radius: var(--radius);
     padding: 2.5rem 3.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .slide-title {

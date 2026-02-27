@@ -37,7 +37,6 @@
         btnBackArrival: $('#btn-back-arrival'),
         slidesNav: $('#slides-nav'),
         faceAnnotation: $('#face-annotation'),
-        faceRing: $('#face-ring'),
         faceLabel: $('#face-label'),
     };
 
@@ -270,15 +269,10 @@
         // Mostra il container
         els.faceAnnotation.classList.add('visible');
 
-        // Anima il cerchio SVG (stroke-dashoffset → 0)
-        setTimeout(() => {
-            els.faceRing.classList.add('drawn');
-        }, 300);
-
         // Mostra la label con nome e link
         setTimeout(() => {
             els.faceLabel.classList.add('visible');
-        }, 1200);
+        }, 600);
     }
 
     // ═══════════════════════════════════════
