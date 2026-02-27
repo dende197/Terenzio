@@ -297,8 +297,8 @@ body {
 /* ── Annotazione faccia di Terenzio ── */
 .face-annotation {
     position: absolute;
-    top: 15%;
-    left: 28%;
+    top: 45.9%;
+    left: 55.7%;
     z-index: 5;
     display: flex;
     align-items: center;
