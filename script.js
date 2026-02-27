@@ -224,7 +224,26 @@
     // ═══════════════════════════════════════
     // GESTIONE TRANSIZIONI TRA FASI
     // ═══════════════════════════════════════
-    function transitionTo(targetId, callback) {
+    function transitionTo(targetId, callback, immediate = false) {
+        if (immediate) {
+            $$('.phase').forEach(p => {
+                p.classList.add('no-transition');
+                p.classList.remove('active');
+            });
+
+            const target = $(`#${targetId}`);
+            if (target) {
+                target.classList.add('active');
+            }
+
+            if (callback) callback();
+
+            setTimeout(() => {
+                $$('.phase').forEach(p => p.classList.remove('no-transition'));
+            }, 50);
+            return;
+        }
+
         const overlay = els.transitionOverlay;
         overlay.classList.add('active');
 
@@ -272,6 +291,11 @@
                 console.warn('Video autoplay blocked:', err);
                 els.video.controls = true;
             });
+
+            // PREPARA SCENA ARRIVO (dietro il video per taglio istantaneo)
+            els.arrivalScene.classList.add('active', 'no-transition');
+            els.arrivalScene.style.zIndex = '1';
+            els.videoPortal.style.zIndex = '10';
         });
 
         // Show audio controls
@@ -279,10 +303,14 @@
     }
 
     function onVideoEnd() {
-        transitionTo('arrival-scene', () => {
-            state.currentPhase = 'arrival';
-            startArrivalSequence();
-        });
+        // Taglio istantaneo
+        els.videoPortal.classList.remove('active');
+        els.videoPortal.style.zIndex = '1';
+        els.arrivalScene.style.zIndex = '10';
+        els.arrivalScene.classList.remove('no-transition');
+
+        state.currentPhase = 'arrival';
+        startArrivalSequence();
     }
 
     // ═══════════════════════════════════════

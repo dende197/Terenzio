@@ -57,6 +57,11 @@ body {
     z-index: 10;
 }
 
+/* Transizione immediata per il taglio video */
+.phase.no-transition {
+    transition: none !important;
+}
+
 /* ═══════════════════════════════════════════
    FASE 1 — INTRO SCREEN
    ═══════════════════════════════════════════ */
@@ -297,8 +302,8 @@ body {
 /* ── Annotazione faccia di Terenzio ── */
 .face-annotation {
     position: absolute;
-    top: 45.9%;
-    left: 55.7%;
+    top: 35%;
+    left: 53.5%;
     z-index: 5;
     display: flex;
     align-items: center;
