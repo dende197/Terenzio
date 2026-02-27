@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
-   TERENZIO — Script Interattivo
-   Gestione fasi, particelle, audio, transizioni
+   TERENZIO — Script Interattivo (Clean)
+   Gestione fasi, audio, transizioni, face annotation
    ═══════════════════════════════════════════ */
 
 (function () {
@@ -12,10 +12,6 @@
     const state = {
         currentPhase: 'intro',
         audioPlaying: false,
-        audioContext: null,
-        gainNode: null,
-        oscillators: [],
-        particlesActive: true,
     };
 
     // ═══════════════════════════════════════
@@ -31,96 +27,19 @@
         slidesContainer: $('#slides-container'),
         btnStart: $('#btn-start'),
         video: $('#intro-video'),
-        particlesCanvas: $('#particles-canvas'),
         typewriterText: $('#typewriter-text'),
         audioControls: $('#audio-controls'),
         btnAudioToggle: $('#btn-audio-toggle'),
+        btnMusicSelect: $('#btn-music-select'),
+        musicDropdown: $('#music-dropdown'),
         volumeSlider: $('#volume-slider'),
         transitionOverlay: $('#transition-overlay'),
         btnBackArrival: $('#btn-back-arrival'),
         slidesNav: $('#slides-nav'),
+        faceAnnotation: $('#face-annotation'),
+        faceRing: $('#face-ring'),
+        faceLabel: $('#face-label'),
     };
-
-    // ═══════════════════════════════════════
-    // SISTEMA PARTICELLE DORATE
-    // ═══════════════════════════════════════
-    class ParticleSystem {
-        constructor(canvas) {
-            this.canvas = canvas;
-            this.ctx = canvas.getContext('2d');
-            this.particles = [];
-            this.resize();
-            window.addEventListener('resize', () => this.resize());
-        }
-
-        resize() {
-            this.canvas.width = window.innerWidth;
-            this.canvas.height = window.innerHeight;
-        }
-
-        createParticle() {
-            return {
-                x: Math.random() * this.canvas.width,
-                y: this.canvas.height + 10,
-                size: Math.random() * 3 + 0.5,
-                speedX: (Math.random() - 0.5) * 0.5,
-                speedY: -(Math.random() * 1.5 + 0.3),
-                opacity: Math.random() * 0.5 + 0.1,
-                life: 0,
-                maxLife: Math.random() * 400 + 200,
-                hue: 38 + Math.random() * 15, // gold hue range
-            };
-        }
-
-        update() {
-            // Spawn nuove particelle
-            if (this.particles.length < 80) {
-                if (Math.random() < 0.3) {
-                    this.particles.push(this.createParticle());
-                }
-            }
-
-            // Update e draw
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-            this.particles = this.particles.filter(p => {
-                p.x += p.speedX + Math.sin(p.life * 0.02) * 0.3;
-                p.y += p.speedY;
-                p.life++;
-
-                const lifeFraction = p.life / p.maxLife;
-                const alpha = lifeFraction < 0.1
-                    ? p.opacity * (lifeFraction / 0.1)
-                    : p.opacity * (1 - lifeFraction);
-
-                if (alpha <= 0 || p.life >= p.maxLife) return false;
-
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                this.ctx.fillStyle = `hsla(${p.hue}, 60%, 60%, ${alpha})`;
-                this.ctx.fill();
-
-                // Glow effect
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-                this.ctx.fillStyle = `hsla(${p.hue}, 60%, 60%, ${alpha * 0.15})`;
-                this.ctx.fill();
-
-                return true;
-            });
-        }
-
-        animate() {
-            if (!state.particlesActive) return;
-            this.update();
-            requestAnimationFrame(() => this.animate());
-        }
-
-        start() {
-            state.particlesActive = true;
-            this.animate();
-        }
-    }
 
     // ═══════════════════════════════════════
     // AUDIO AMBIENTE (Web Audio API)
@@ -131,8 +50,6 @@
             this.ctx = null;
             this.masterGain = null;
             this.isPlaying = false;
-            this.scheduledNotes = [];
-            this.nextNoteTime = 0;
             this.currentScale = 0;
         }
 
@@ -160,14 +77,11 @@
             this.masterGain.connect(convolver);
             convolver.connect(reverbGain);
             reverbGain.connect(this.ctx.destination);
-
-            state.audioContext = this.ctx;
-            state.gainNode = this.masterGain;
         }
 
         // Scala pentatonica greca (modo dorico)
         getNote(index) {
-            const baseFreq = 220; // La3
+            const baseFreq = 220;
             const intervals = [0, 2, 3, 5, 7, 9, 10, 12, 14, 15, 17, 19];
             const octave = Math.floor(index / intervals.length);
             const note = intervals[index % intervals.length];
@@ -181,12 +95,11 @@
             const osc2 = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
 
-            // Timbro simile alla lira (onda triangolare + leggera distorsione)
             osc1.type = 'triangle';
             osc1.frequency.value = freq;
 
             osc2.type = 'sine';
-            osc2.frequency.value = freq * 2; // armonica ottava
+            osc2.frequency.value = freq * 2;
 
             const gain2 = this.ctx.createGain();
             gain2.gain.value = 0.15;
@@ -196,11 +109,9 @@
             gain2.connect(gain);
             gain.connect(this.masterGain);
 
-            // Inviluppo ADSR semplificato
             const attackTime = 0.05;
             const decayTime = duration * 0.3;
             const sustainLevel = volume * 0.4;
-            const releaseTime = duration * 0.5;
 
             gain.gain.setValueAtTime(0, startTime);
             gain.gain.linearRampToValueAtTime(volume, startTime + attackTime);
@@ -213,14 +124,12 @@
             osc2.stop(startTime + duration + 0.1);
         }
 
-        // Pattern melodico ricorrente
         playPattern() {
             if (!this.isPlaying || !this.ctx) return;
 
             const now = this.ctx.currentTime;
-            const tempo = 0.8; // secondi per beat
+            const tempo = 0.8;
 
-            // Pattern melodici ispirati alla musica greca antica
             const patterns = [
                 [0, 2, 4, 5, 4, 2, 0, -1],
                 [2, 4, 5, 7, 5, 4, 2, 0],
@@ -239,7 +148,7 @@
                 this.playNote(freq, startTime, duration, 0.08 + Math.random() * 0.06);
             });
 
-            // Drone di base (nota pedale)
+            // Drone di base
             const droneFreq = this.getNote(0);
             const droneGain = this.ctx.createGain();
             const droneOsc = this.ctx.createOscillator();
@@ -251,7 +160,6 @@
             droneOsc.start(now);
             droneOsc.stop(now + pattern.length * tempo);
 
-            // Schedula il prossimo pattern
             const patternDuration = pattern.length * tempo;
             const pause = 1 + Math.random() * 2;
             setTimeout(() => this.playPattern(), (patternDuration + pause) * 1000);
@@ -321,33 +229,37 @@
         overlay.classList.add('active');
 
         setTimeout(() => {
-            // Nascondi tutte le fasi
             $$('.phase').forEach(p => p.classList.remove('active'));
 
-            // Mostra la fase target
             const target = $(`#${targetId}`);
             if (target) {
                 target.classList.add('active');
             }
 
-            // Callback
             if (callback) callback();
 
-            // Dissolvi overlay
             setTimeout(() => {
                 overlay.classList.remove('active');
             }, 500);
-        }, 1500);
+        }, 1200);
     }
 
-    function fadeTransition(targetId, callback) {
-        // Transizione diretta senza overlay nero
-        $$('.phase').forEach(p => {
-            if (p.id !== targetId) p.classList.remove('active');
-        });
-        const target = $(`#${targetId}`);
-        if (target) target.classList.add('active');
-        if (callback) setTimeout(callback, 500);
+    // ═══════════════════════════════════════
+    // ANIMAZIONE FACCIA
+    // ═══════════════════════════════════════
+    function animateFaceAnnotation() {
+        // Mostra il container
+        els.faceAnnotation.classList.add('visible');
+
+        // Anima il cerchio SVG (stroke-dashoffset → 0)
+        setTimeout(() => {
+            els.faceRing.classList.add('drawn');
+        }, 300);
+
+        // Mostra la label con nome e link
+        setTimeout(() => {
+            els.faceLabel.classList.add('visible');
+        }, 1200);
     }
 
     // ═══════════════════════════════════════
@@ -358,7 +270,6 @@
             state.currentPhase = 'video';
             els.video.play().catch(err => {
                 console.warn('Video autoplay blocked:', err);
-                // Fallback: mostra un pulsante play
                 els.video.controls = true;
             });
         });
@@ -378,12 +289,17 @@
     // SEQUENZA ARRIVO
     // ═══════════════════════════════════════
     async function startArrivalSequence() {
+        // Anima la face annotation
+        await delay(600);
+        animateFaceAnnotation();
+
         // Typewriter per la citazione
+        await delay(1500);
         const quoteText = 'Homo sum, humani nihil a me alienum puto.';
         const typewriter = new Typewriter(els.typewriterText, quoteText, 70);
         await typewriter.start();
 
-        // Mostra traduzione dopo il typewriter
+        // Mostra traduzione
         await delay(800);
         const translation = $('.quote-translation');
         translation.textContent = '« Sono un essere umano, nulla di ciò che è umano mi è estraneo. »';
@@ -404,11 +320,10 @@
         const targetSlide = $(`#${slideId}`);
         if (targetSlide) {
             targetSlide.classList.add('active');
-            // Re-trigger timeline animations
             targetSlide.querySelectorAll('.timeline-item').forEach((item, i) => {
                 item.style.animation = 'none';
-                item.offsetHeight; // trigger reflow
-                item.style.animation = `fade-in-left 0.8s ease ${i * 0.2}s forwards`;
+                item.offsetHeight;
+                item.style.animation = `fade-in-left 0.6s ease ${i * 0.15}s forwards`;
             });
         }
 
@@ -435,6 +350,29 @@
     }
 
     // ═══════════════════════════════════════
+    // MUSIC DROPDOWN
+    // ═══════════════════════════════════════
+    function toggleMusicDropdown() {
+        els.musicDropdown.classList.toggle('open');
+    }
+
+    function selectMusicTrack(trackBtn) {
+        // Rimuovi active da tutti
+        $$('.music-option').forEach(o => o.classList.remove('active'));
+        trackBtn.classList.add('active');
+
+        const trackId = trackBtn.dataset.track;
+        console.log(`🎵 Traccia selezionata: ${trackId}`);
+
+        // Chiudi dropdown
+        els.musicDropdown.classList.remove('open');
+
+        // TODO: Per ora solo la lira sintetizzata funziona.
+        // Quando l'utente aggiungerà le tracce mp3, si potrà
+        // integrare qui il cambio di sorgente audio.
+    }
+
+    // ═══════════════════════════════════════
     // UTILITY
     // ═══════════════════════════════════════
     function delay(ms) {
@@ -445,16 +383,11 @@
     // INIZIALIZZAZIONE
     // ═══════════════════════════════════════
     function init() {
-        // Particelle
-        const particles = new ParticleSystem(els.particlesCanvas);
-        particles.start();
-
         // Audio
         const audio = new AmbientAudio();
 
         // ── Event: Pulsante Start ──
         els.btnStart.addEventListener('click', () => {
-            // Avvia audio
             audio.start();
             state.audioPlaying = true;
             startVideo();
@@ -471,8 +404,8 @@
             }
         });
 
-        // ── Event: Pulsanti Esplora (arrivo → slides) ──
-        $$('.btn-explore').forEach(btn => {
+        // ── Event: Face info links (arrivo → slides) ──
+        $$('.face-info-link').forEach(btn => {
             btn.addEventListener('click', () => {
                 const target = btn.dataset.target;
                 goToSlides(target);
@@ -490,6 +423,25 @@
         // ── Event: Torna indietro ──
         els.btnBackArrival.addEventListener('click', goBackToArrival);
 
+        // ── Event: Music Select (dropdown) ──
+        els.btnMusicSelect.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMusicDropdown();
+        });
+
+        // ── Event: Music Options ──
+        $$('.music-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectMusicTrack(option);
+            });
+        });
+
+        // ── Event: Close dropdown on outside click ──
+        document.addEventListener('click', () => {
+            els.musicDropdown.classList.remove('open');
+        });
+
         // ── Event: Toggle Audio ──
         els.btnAudioToggle.addEventListener('click', () => {
             const playing = audio.toggle();
@@ -500,7 +452,7 @@
         // ── Event: Volume Slider ──
         els.volumeSlider.addEventListener('input', (e) => {
             const value = e.target.value / 100;
-            audio.setVolume(value * 0.3); // max 30%
+            audio.setVolume(value * 0.3);
         });
 
         // ── Keyboard shortcuts ──
@@ -508,6 +460,7 @@
             switch (e.key) {
                 case 'Escape':
                     if (state.currentPhase === 'slides') goBackToArrival();
+                    els.musicDropdown.classList.remove('open');
                     break;
                 case ' ':
                     if (state.currentPhase === 'video') {
@@ -543,7 +496,7 @@
             }
         });
 
-        console.log('🏛️ Terenzio — Sito inizializzato');
+        console.log('🏛️ Terenzio — Sito inizializzato (clean UI)');
     }
 
     // Avvia quando il DOM è pronto
