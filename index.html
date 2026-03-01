@@ -12,20 +12,20 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1.3">
+    <link rel="stylesheet" href="style.css?v=2.0">
 </head>
 
 <body>
+
+    <!-- Particelle fluttuanti globali -->
+    <div class="particles" id="particles" aria-hidden="true"></div>
 
     <!-- ═══════════════════════════════════════════ -->
     <!-- FASE 1 — SCHERMATA INTRO                    -->
     <!-- ═══════════════════════════════════════════ -->
     <section id="intro-screen" class="phase active">
-        <div class="intro-bg"></div>
         <div class="intro-content">
-            <div class="seal-container">
-                <img src="assets/images/greek_mask.png" alt="Maschera Teatrale" class="seal-image">
-            </div>
+            <div class="laurel-wreath" aria-hidden="true">🏛</div>
             <h1 class="intro-title">
                 <span class="title-line">PVBLIVS</span>
                 <span class="title-line accent">TERENTIVS</span>
@@ -36,74 +36,54 @@
             <button id="btn-start" class="btn-roman" aria-label="Inizia il viaggio">
                 <span class="btn-text">INIZIA IL VIAGGIO</span>
             </button>
-            <p class="intro-hint">Clicca per iniziare</p>
+            <p class="intro-hint">Clicca per iniziare l'esperienza</p>
         </div>
     </section>
 
     <!-- ═══════════════════════════════════════════ -->
-    <!-- FASE 2A — VIDEO PORTALE                     -->
+    <!-- FASE 2 — CONTENITORE UNIFICATO              -->
+    <!-- Video + Scena post-video, stesse dimensioni -->
     <!-- ═══════════════════════════════════════════ -->
-    <section id="video-portal" class="phase">
-        <div class="portal-bg"></div>
-        <div class="portal-frame">
-            <div class="video-container">
+    <section id="theater-phase" class="phase">
+        <!-- Cornice unica condivisa -->
+        <div class="theater-frame" id="theater-frame">
+
+            <!-- Livello video (sopra) -->
+            <div class="theater-layer" id="video-layer">
                 <video id="intro-video" preload="auto" playsinline>
                     <source src="fattobene.mov" type="video/mp4">
                 </video>
-                <div class="video-vignette"></div>
             </div>
-        </div>
-        <div class="portal-ambient-text">Anno 180 a.C. — Cartagine → Roma</div>
-    </section>
 
-    <!-- ═══════════════════════════════════════════ -->
-    <!-- FASE 2B — SCENA ARRIVO (non fullscreen)     -->
-    <!-- ═══════════════════════════════════════════ -->
-    <section id="arrival-scene" class="phase">
-        <div class="arrival-bg"></div>
-
-        <!-- Scena di arrivo interattiva (tipografica, senza immagine statica) -->
-        <div class="scene-frame" id="interactive-scene">
-            <div class="cinematic-arrival-content" id="parallax-content">
-                <div class="arrival-year">180 a.C.</div>
-                <h2 class="arrival-heading">L'Arrivo a Roma</h2>
-                <div class="arrival-divider"></div>
-                <p class="arrival-description">Un giovane liberto dai confini dell'Impero è destinato a cambiare per
-                    sempre il teatro latino.</p>
-
-                <!-- Annotazione della figura integrata nella composizione tipografica -->
-                <div class="face-annotation scholastic" id="face-annotation">
-                    <div class="face-label" id="face-label">
-                        <span class="face-name">Publio Terenzio Afro</span>
-                        <span class="face-subtitle">Commediografo • 185–159 a.C.</span>
-                        <div class="face-info-links">
-                            <button class="face-info-link" data-target="slide-vita">Vita</button>
-                            <button class="face-info-link" data-target="slide-opere">Opere</button>
-                            <button class="face-info-link" data-target="slide-mondo">Mondo</button>
+            <!-- Livello scena (sotto, stessa dimensione) -->
+            <div class="theater-layer" id="scene-layer">
+                <img src="assets/images/Progetto senza titolo.png" alt="Scena di Terenzio" class="scene-image">
+                <div class="scene-overlay"></div>
+                <div class="scene-content" id="scene-content">
+                    <div class="scene-info-panel" id="info-panel">
+                        <h2 class="scene-name">Publio Terenzio Afro</h2>
+                        <p class="scene-role">Commediografo • 185–159 a.C.</p>
+                        <div class="scene-divider"></div>
+                        <p class="scene-quote" id="typewriter-text"></p>
+                        <p class="scene-translation" id="scene-translation"></p>
+                        <p class="scene-author" id="scene-author">— Heautontimorumenos</p>
+                        <div class="scene-nav-links" id="scene-nav-links">
+                            <button class="scene-link" data-target="slide-vita">La Vita</button>
+                            <button class="scene-link" data-target="slide-opere">Le Opere</button>
+                            <button class="scene-link" data-target="slide-mondo">Il Mondo</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Citazione sotto il frame -->
-        <div class="arrival-bottom">
-            <div class="quote-container">
-                <div class="quote-mark">"</div>
-                <p id="typewriter-text" class="quote-text"></p>
-                <p class="quote-translation"></p>
-                <p class="quote-author">— Publio Terenzio Afro, <em>Heautontimorumenos</em></p>
-            </div>
-        </div>
+        <div class="theater-caption">Anno 180 a.C. — Cartagine → Roma</div>
     </section>
 
     <!-- ═══════════════════════════════════════════ -->
     <!-- FASE 3 — SLIDES CONTENUTO                   -->
     <!-- ═══════════════════════════════════════════ -->
     <section id="slides-container" class="phase">
-        <div class="slides-bg"></div>
-
-        <!-- Barra navigazione -->
         <nav class="slides-nav" id="slides-nav">
             <button class="nav-tab active" data-slide="slide-vita">La Vita</button>
             <button class="nav-tab" data-slide="slide-opere">Le Opere</button>
@@ -177,47 +157,43 @@
                             <div class="opera-year">166 a.C.</div>
                             <h3>Andria</h3>
                             <p class="opera-desc">La "Ragazza di Andro". Un giovane ateniese ama una ragazza straniera,
-                                contro la volontà del padre. Intrighi, equivoci e un lieto fine con il riconoscimento
-                                delle origini.</p>
-                            <div class="opera-tag">Amore & Identità</div>
+                                contro la volontà del padre. Intrighi, equivoci e un lieto fine.</p>
+                            <div class="opera-tag">Amore &amp; Identità</div>
                         </div>
                         <div class="opera-card">
                             <div class="opera-year">165 a.C.</div>
                             <h3>Hecyra</h3>
                             <p class="opera-desc">La "Suocera". La commedia più sfortunata: il pubblico la abbandonò due
-                                volte per assistere a spettacoli di gladiatori e funamboli. Un capolavoro incompreso
-                                sulla compassione e il perdono.</p>
-                            <div class="opera-tag">Comprensione & Perdono</div>
+                                volte per spettacoli di gladiatori. Un capolavoro incompreso.</p>
+                            <div class="opera-tag">Comprensione &amp; Perdono</div>
                         </div>
                         <div class="opera-card">
                             <div class="opera-year">163 a.C.</div>
                             <h3>Heautontimorumenos</h3>
                             <p class="opera-desc">"Il punitore di se stesso". Contiene la celebre frase: <em>"Homo sum,
-                                    humani nihil a me alienum puto"</em> — Sono un essere umano, nulla di ciò che è
-                                umano mi è estraneo.</p>
-                            <div class="opera-tag">Umanità & Empatia</div>
+                                    humani nihil a me alienum puto"</em>.</p>
+                            <div class="opera-tag">Umanità &amp; Empatia</div>
                         </div>
                         <div class="opera-card">
                             <div class="opera-year">161 a.C.</div>
                             <h3>Eunuchus</h3>
                             <p class="opera-desc">L'"Eunuco". Il più grande successo di pubblico: fu replicato nel
-                                giorno stesso della prima, un fatto senza precedenti. Incassò 8.000 sesterzi — record
-                                assoluto.</p>
-                            <div class="opera-tag">Successo & Comicità</div>
+                                giorno stesso della prima. Incassò 8.000 sesterzi — record assoluto.</p>
+                            <div class="opera-tag">Successo &amp; Comicità</div>
                         </div>
                         <div class="opera-card">
                             <div class="opera-year">161 a.C.</div>
                             <h3>Phormio</h3>
                             <p class="opera-desc">"Formione". Un parassita astuto orchestra matrimoni e inganni. La più
-                                "plautina" delle commedie di Terenzio, ricca di azione e colpi di scena.</p>
-                            <div class="opera-tag">Astuzia & Intrigo</div>
+                                "plautina" delle commedie di Terenzio.</p>
+                            <div class="opera-tag">Astuzia &amp; Intrigo</div>
                         </div>
                         <div class="opera-card">
                             <div class="opera-year">160 a.C.</div>
                             <h3>Adelphoe</h3>
                             <p class="opera-desc">"I fratelli". L'ultima opera, rappresentata ai funerali di Emilio
-                                Paolo. Due padri, due metodi educativi: rigore vs. liberalità. Chi ha ragione?</p>
-                            <div class="opera-tag">Educazione & Famiglia</div>
+                                Paolo. Due padri, due metodi educativi: rigore vs. liberalità.</p>
+                            <div class="opera-tag">Educazione &amp; Famiglia</div>
                         </div>
                     </div>
                 </div>
@@ -236,30 +212,29 @@
                             <div class="mondo-icon">🏛️</div>
                             <h3>Roma Repubblicana</h3>
                             <p>Nel II secolo a.C. Roma è la potenza dominante del Mediterraneo. Dopo le vittorie su
-                                Cartagine (Seconda e Terza Guerra Punica) e la conquista della Macedonia, la Repubblica
-                                attraversa un periodo di immensa ricchezza e trasformazione sociale.</p>
+                                Cartagine e la conquista della Macedonia, la Repubblica attraversa un periodo di immensa
+                                ricchezza e trasformazione sociale.</p>
                         </div>
                         <div class="mondo-card">
                             <div class="mondo-icon">📚</div>
                             <h3>Il Circolo degli Scipioni</h3>
                             <p>Terenzio entra nell'orbita di Scipione Emiliano e Gaio Lelio — l'élite filellena di Roma.
-                                Questo circolo promuove l'<strong>humanitas</strong>: l'ideale di una cultura raffinata
-                                che unisce la tradizione romana alla filosofia e all'arte greca.</p>
+                                Questo circolo promuove l'<strong>humanitas</strong>: una cultura raffinata che unisce
+                                tradizione romana e arte greca.</p>
                         </div>
                         <div class="mondo-card">
                             <div class="mondo-icon">🎭</div>
                             <h3>Il Teatro Romano</h3>
                             <p>Le commedie venivano rappresentate durante i <strong>ludi</strong> (feste pubbliche). Non
-                                esistevano teatri permanenti: si costruivano palchi temporanei in legno. Il pubblico era
-                                rumoroso, distratto, e poteva abbandonare lo spettacolo in qualsiasi momento — come
-                                accadde due volte all'<em>Hecyra</em>.</p>
+                                esistevano teatri permanenti: si costruivano palchi temporanei in legno.</p>
                         </div>
                         <div class="mondo-card">
                             <div class="mondo-icon">⚖️</div>
                             <h3>Schiavitù e Libertà</h3>
                             <p>La storia di Terenzio — da schiavo a poeta celebrato — è emblematica della società
-                                romana. La <strong>manumissio</strong> (liberazione) permetteva agli schiavi istruiti di
-                                conquistare la libertà e persino la fama, pur rimanendo legati al patrono.</p>
+                                romana. La <strong>manumissio</strong> permetteva agli schiavi istruiti di conquistare
+                                la
+                                libertà e persino la fama.</p>
                         </div>
                     </div>
                 </div>
@@ -268,45 +243,22 @@
     </section>
 
     <!-- ═══════════════════════════════════════════ -->
-    <!-- CONTROLLI AUDIO + DROPDOWN MUSICA          -->
+    <!-- CONTROLLI AUDIO                             -->
     <!-- ═══════════════════════════════════════════ -->
     <div id="audio-controls" class="audio-controls hidden">
-        <!-- Dropdown musica (apre verso l'alto) -->
-        <div class="music-dropdown" id="music-dropdown">
-            <div class="music-dropdown-title">Scegli musica</div>
-            <button class="music-option active" data-track="lira">
-                <span class="music-option-icon">♪</span>
-                <span>Lira Greca (sintetizzata)</span>
-            </button>
-            <button class="music-option" data-track="track2">
-                <span class="music-option-icon">♪</span>
-                <span>Traccia 2 (da inserire)</span>
-            </button>
-            <button class="music-option" data-track="track3">
-                <span class="music-option-icon">♪</span>
-                <span>Traccia 3 (da inserire)</span>
-            </button>
-        </div>
-
         <div class="audio-main-bar">
-            <button id="btn-music-select" class="btn-audio" aria-label="Scegli musica">
-                <span class="audio-icon">🎵</span>
-                <span class="audio-label">Musica</span>
-            </button>
             <button id="btn-audio-toggle" class="btn-audio" aria-label="Toggle audio">
-                <span class="audio-icon">⏯</span>
+                <span class="audio-icon">♪</span>
+                <span class="audio-label">Lira</span>
             </button>
             <input type="range" id="volume-slider" min="0" max="100" value="30" class="volume-slider">
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════ -->
-    <!-- TRANSIZIONE (overlay)                       -->
-    <!-- ═══════════════════════════════════════════ -->
+    <!-- Transizione -->
     <div id="transition-overlay" class="transition-overlay"></div>
 
-    <script src="script.js?v=1.3"></script>
-    </script>
+    <script src="script.js?v=2.0"></script>
 </body>
 
 </html>

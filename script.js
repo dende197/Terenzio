@@ -1,50 +1,68 @@
 /* ═══════════════════════════════════════════
-   TERENZIO — Script Interattivo (Clean)
-   Gestione fasi, audio, transizioni, face annotation
+   TERENZIO — Script v2.0
+   Gestione fasi, audio, transizioni
    ═══════════════════════════════════════════ */
 
 (function () {
     'use strict';
 
     // ═══════════════════════════════════════
-    // STATO GLOBALE
+    // STATO
     // ═══════════════════════════════════════
     const state = {
         currentPhase: 'intro',
         audioPlaying: false,
     };
 
-    // ═══════════════════════════════════════
-    // ELEMENTI DOM
-    // ═══════════════════════════════════════
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => document.querySelectorAll(sel);
 
+    // ═══════════════════════════════════════
+    // ELEMENTI
+    // ═══════════════════════════════════════
     const els = {
         introScreen: $('#intro-screen'),
-        videoPortal: $('#video-portal'),
-        arrivalScene: $('#arrival-scene'),
+        theaterPhase: $('#theater-phase'),
         slidesContainer: $('#slides-container'),
         btnStart: $('#btn-start'),
         video: $('#intro-video'),
+        videoLayer: $('#video-layer'),
+        sceneLayer: $('#scene-layer'),
+        theaterFrame: $('#theater-frame'),
+        infoPanel: $('#info-panel'),
         typewriterText: $('#typewriter-text'),
+        sceneTranslation: $('#scene-translation'),
+        sceneAuthor: $('#scene-author'),
+        sceneNavLinks: $('#scene-nav-links'),
         audioControls: $('#audio-controls'),
         btnAudioToggle: $('#btn-audio-toggle'),
-        btnMusicSelect: $('#btn-music-select'),
-        musicDropdown: $('#music-dropdown'),
         volumeSlider: $('#volume-slider'),
         transitionOverlay: $('#transition-overlay'),
         btnBackArrival: $('#btn-back-arrival'),
         slidesNav: $('#slides-nav'),
-        faceAnnotation: $('#face-annotation'),
-        faceLabel: $('#face-label'),
-        interactiveScene: $('#interactive-scene'),
-        parallaxContent: $('#parallax-content')
+        particles: $('#particles'),
     };
 
     // ═══════════════════════════════════════
-    // AUDIO AMBIENTE (Web Audio API)
-    // Lira greca sintetizzata
+    // PARTICELLE
+    // ═══════════════════════════════════════
+    function createParticles() {
+        const container = els.particles;
+        if (!container) return;
+        const count = 40;
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = (8 + Math.random() * 15) + 's';
+            p.style.animationDelay = (Math.random() * 10) + 's';
+            p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+            container.appendChild(p);
+        }
+    }
+
+    // ═══════════════════════════════════════
+    // AUDIO (Lira sintetizzata)
     // ═══════════════════════════════════════
     class AmbientAudio {
         constructor() {
@@ -59,12 +77,11 @@
             this.masterGain = this.ctx.createGain();
             this.masterGain.gain.value = 0.15;
 
-            // Riverbero con convolver simulato
             const convolver = this.ctx.createConvolver();
             const reverbLength = 3 * this.ctx.sampleRate;
             const impulse = this.ctx.createBuffer(2, reverbLength, this.ctx.sampleRate);
-            for (let channel = 0; channel < 2; channel++) {
-                const data = impulse.getChannelData(channel);
+            for (let ch = 0; ch < 2; ch++) {
+                const data = impulse.getChannelData(ch);
                 for (let i = 0; i < reverbLength; i++) {
                     data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / reverbLength, 2.5);
                 }
@@ -80,7 +97,6 @@
             reverbGain.connect(this.ctx.destination);
         }
 
-        // Scala pentatonica greca (modo dorico)
         getNote(index) {
             const baseFreq = 220;
             const intervals = [0, 2, 3, 5, 7, 9, 10, 12, 14, 15, 17, 19];
@@ -91,14 +107,12 @@
 
         playNote(freq, startTime, duration, volume = 0.12) {
             if (!this.ctx) return;
-
             const osc1 = this.ctx.createOscillator();
             const osc2 = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
 
             osc1.type = 'triangle';
             osc1.frequency.value = freq;
-
             osc2.type = 'sine';
             osc2.frequency.value = freq * 2;
 
@@ -110,13 +124,9 @@
             gain2.connect(gain);
             gain.connect(this.masterGain);
 
-            const attackTime = 0.05;
-            const decayTime = duration * 0.3;
-            const sustainLevel = volume * 0.4;
-
             gain.gain.setValueAtTime(0, startTime);
-            gain.gain.linearRampToValueAtTime(volume, startTime + attackTime);
-            gain.gain.linearRampToValueAtTime(sustainLevel, startTime + attackTime + decayTime);
+            gain.gain.linearRampToValueAtTime(volume, startTime + 0.05);
+            gain.gain.linearRampToValueAtTime(volume * 0.4, startTime + 0.05 + duration * 0.3);
             gain.gain.linearRampToValueAtTime(0, startTime + duration);
 
             osc1.start(startTime);
@@ -127,10 +137,8 @@
 
         playPattern() {
             if (!this.isPlaying || !this.ctx) return;
-
             const now = this.ctx.currentTime;
             const tempo = 0.8;
-
             const patterns = [
                 [0, 2, 4, 5, 4, 2, 0, -1],
                 [2, 4, 5, 7, 5, 4, 2, 0],
@@ -145,58 +153,47 @@
             pattern.forEach((noteIdx, i) => {
                 const freq = this.getNote(noteIdx + 3);
                 const duration = tempo * (0.7 + Math.random() * 0.6);
-                const startTime = now + i * tempo;
-                this.playNote(freq, startTime, duration, 0.08 + Math.random() * 0.06);
+                this.playNote(freq, now + i * tempo, duration, 0.08 + Math.random() * 0.06);
             });
 
-            // Drone di base
-            const droneFreq = this.getNote(0);
-            const droneGain = this.ctx.createGain();
+            // Drone
             const droneOsc = this.ctx.createOscillator();
+            const droneGain = this.ctx.createGain();
             droneOsc.type = 'sine';
-            droneOsc.frequency.value = droneFreq / 2;
+            droneOsc.frequency.value = this.getNote(0) / 2;
             droneGain.gain.value = 0.03;
             droneOsc.connect(droneGain);
             droneGain.connect(this.masterGain);
             droneOsc.start(now);
             droneOsc.stop(now + pattern.length * tempo);
 
-            const patternDuration = pattern.length * tempo;
+            const dur = pattern.length * tempo;
             const pause = 1 + Math.random() * 2;
-            setTimeout(() => this.playPattern(), (patternDuration + pause) * 1000);
+            setTimeout(() => this.playPattern(), (dur + pause) * 1000);
         }
 
         start() {
             if (!this.ctx) this.init();
-            if (this.ctx.state === 'suspended') {
-                this.ctx.resume();
-            }
+            if (this.ctx.state === 'suspended') this.ctx.resume();
             this.isPlaying = true;
             this.playPattern();
         }
 
-        stop() {
-            this.isPlaying = false;
-        }
+        stop() { this.isPlaying = false; }
 
         toggle() {
-            if (this.isPlaying) {
-                this.stop();
-            } else {
-                this.start();
-            }
+            if (this.isPlaying) this.stop();
+            else this.start();
             return this.isPlaying;
         }
 
-        setVolume(value) {
-            if (this.masterGain) {
-                this.masterGain.gain.value = value;
-            }
+        setVolume(v) {
+            if (this.masterGain) this.masterGain.gain.value = v;
         }
     }
 
     // ═══════════════════════════════════════
-    // EFFETTO TYPEWRITER
+    // TYPEWRITER
     // ═══════════════════════════════════════
     class Typewriter {
         constructor(element, text, speed = 60) {
@@ -205,7 +202,6 @@
             this.speed = speed;
             this.index = 0;
         }
-
         start() {
             return new Promise((resolve) => {
                 const type = () => {
@@ -223,87 +219,41 @@
     }
 
     // ═══════════════════════════════════════
-    // GESTIONE TRANSIZIONI TRA FASI
+    // TRANSIZIONI
     // ═══════════════════════════════════════
-    function transitionTo(targetId, callback, immediate = false) {
-        if (immediate) {
-            $$('.phase').forEach(p => {
-                p.classList.add('no-transition');
-                p.classList.remove('active');
-            });
-
-            const target = $(`#${targetId}`);
-            if (target) {
-                target.classList.add('active');
-            }
-
-            if (callback) callback();
-
-            setTimeout(() => {
-                $$('.phase').forEach(p => p.classList.remove('no-transition'));
-            }, 50);
-            return;
-        }
-
+    function transitionTo(targetId, callback) {
         const overlay = els.transitionOverlay;
         overlay.classList.add('active');
 
         setTimeout(() => {
             $$('.phase').forEach(p => p.classList.remove('active'));
-
             const target = $(`#${targetId}`);
-            if (target) {
-                target.classList.add('active');
-            }
-
+            if (target) target.classList.add('active');
             if (callback) callback();
 
             setTimeout(() => {
                 overlay.classList.remove('active');
-            }, 500);
-        }, 1200);
+            }, 400);
+        }, 1000);
     }
 
     // ═══════════════════════════════════════
-    // ANIMAZIONE FACCIA
-    // ═══════════════════════════════════════
-    function animateFaceAnnotation() {
-        if (!els.faceAnnotation) return;
-        els.faceAnnotation.classList.add('visible');
-
-        setTimeout(() => {
-            if (els.faceLabel) els.faceLabel.classList.add('visible');
-        }, 1500); // Delayed slightly as the text animations take time
-    }
-
-    // ═══════════════════════════════════════
-    // GESTIONE VIDEO
+    // VIDEO → SCENA (taglio netto)
     // ═══════════════════════════════════════
     function startVideo() {
-        transitionTo('video-portal', () => {
+        transitionTo('theater-phase', () => {
             state.currentPhase = 'video';
             els.video.play().catch(err => {
                 console.warn('Video autoplay blocked:', err);
                 els.video.controls = true;
             });
-
-            // PREPARA SCENA ARRIVO (dietro il video per taglio istantaneo)
-            els.arrivalScene.classList.add('active', 'no-transition');
-            els.arrivalScene.style.zIndex = '1';
-            els.videoPortal.style.zIndex = '10';
         });
-
-        // Show audio controls
         els.audioControls.classList.remove('hidden');
     }
 
     function onVideoEnd() {
-        // Taglio istantaneo
-        els.videoPortal.classList.remove('active');
-        els.videoPortal.style.zIndex = '1';
-        els.arrivalScene.style.zIndex = '10';
-        els.arrivalScene.classList.remove('no-transition');
-
+        // Taglio netto: nascondi il video layer, la scena è già sotto
+        els.videoLayer.classList.add('hidden');
         state.currentPhase = 'arrival';
         startArrivalSequence();
     }
@@ -312,25 +262,23 @@
     // SEQUENZA ARRIVO
     // ═══════════════════════════════════════
     async function startArrivalSequence() {
-        // Anima la face annotation
-        await delay(600);
-        animateFaceAnnotation();
+        await delay(400);
+        els.infoPanel.classList.add('visible');
 
-        // Typewriter per la citazione
-        await delay(1500);
+        await delay(1200);
         const quoteText = 'Homo sum, humani nihil a me alienum puto.';
-        const typewriter = new Typewriter(els.typewriterText, quoteText, 70);
-        await typewriter.start();
+        const tw = new Typewriter(els.typewriterText, quoteText, 65);
+        await tw.start();
 
-        // Mostra traduzione
-        await delay(800);
-        const translation = $('.quote-translation');
-        translation.textContent = '« Sono un essere umano, nulla di ciò che è umano mi è estraneo. »';
-        translation.classList.add('visible');
-
-        // Mostra autore
         await delay(600);
-        $('.quote-author').classList.add('visible');
+        els.sceneTranslation.textContent = '« Sono un essere umano, nulla di ciò che è umano mi è estraneo. »';
+        els.sceneTranslation.classList.add('visible');
+
+        await delay(500);
+        els.sceneAuthor.classList.add('visible');
+
+        await delay(400);
+        els.sceneNavLinks.classList.add('visible');
     }
 
     // ═══════════════════════════════════════
@@ -345,7 +293,7 @@
             targetSlide.classList.add('active');
             targetSlide.querySelectorAll('.timeline-item').forEach((item, i) => {
                 item.style.animation = 'none';
-                item.offsetHeight;
+                item.offsetHeight; // force reflow
                 item.style.animation = `fade-in-left 0.6s ease ${i * 0.15}s forwards`;
             });
         }
@@ -359,7 +307,6 @@
             showSlide(slideId);
             return;
         }
-
         transitionTo('slides-container', () => {
             state.currentPhase = 'slides';
             showSlide(slideId || 'slide-vita');
@@ -367,32 +314,9 @@
     }
 
     function goBackToArrival() {
-        transitionTo('arrival-scene', () => {
+        transitionTo('theater-phase', () => {
             state.currentPhase = 'arrival';
         });
-    }
-
-    // ═══════════════════════════════════════
-    // MUSIC DROPDOWN
-    // ═══════════════════════════════════════
-    function toggleMusicDropdown() {
-        els.musicDropdown.classList.toggle('open');
-    }
-
-    function selectMusicTrack(trackBtn) {
-        // Rimuovi active da tutti
-        $$('.music-option').forEach(o => o.classList.remove('active'));
-        trackBtn.classList.add('active');
-
-        const trackId = trackBtn.dataset.track;
-        console.log(`🎵 Traccia selezionata: ${trackId}`);
-
-        // Chiudi dropdown
-        els.musicDropdown.classList.remove('open');
-
-        // TODO: Per ora solo la lira sintetizzata funziona.
-        // Quando l'utente aggiungerà le tracce mp3, si potrà
-        // integrare qui il cambio di sorgente audio.
     }
 
     // ═══════════════════════════════════════
@@ -403,23 +327,24 @@
     }
 
     // ═══════════════════════════════════════
-    // INIZIALIZZAZIONE
+    // INIT
     // ═══════════════════════════════════════
     function init() {
-        // Audio
+        createParticles();
+
         const audio = new AmbientAudio();
 
-        // ── Event: Pulsante Start ──
+        // Start
         els.btnStart.addEventListener('click', () => {
             audio.start();
             state.audioPlaying = true;
             startVideo();
         });
 
-        // ── Event: Video terminato ──
+        // Video end
         els.video.addEventListener('ended', onVideoEnd);
 
-        // ── Event: Skip video (click) ──
+        // Skip video
         els.video.addEventListener('click', () => {
             if (els.video.currentTime > 2) {
                 els.video.pause();
@@ -427,85 +352,40 @@
             }
         });
 
-        // ── Event: Face info links (arrivo → slides) ──
-        $$('.face-info-link').forEach(btn => {
+        // Scene nav links
+        $$('.scene-link').forEach(btn => {
             btn.addEventListener('click', () => {
-                const target = btn.dataset.target;
-                goToSlides(target);
+                goToSlides(btn.dataset.target);
             });
         });
 
-        // ── Event: Navigazione tabs slides ──
+        // Slide tabs
         $$('.nav-tab[data-slide]').forEach(tab => {
             tab.addEventListener('click', () => {
-                const target = tab.dataset.slide;
-                showSlide(target);
+                showSlide(tab.dataset.slide);
             });
         });
 
-        // ── Event: Torna indietro ──
+        // Back button
         els.btnBackArrival.addEventListener('click', goBackToArrival);
 
-        // ── Event: Music Select (dropdown) ──
-        els.btnMusicSelect.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMusicDropdown();
-        });
-
-        // ── Event: Music Options ──
-        $$('.music-option').forEach(option => {
-            option.addEventListener('click', (e) => {
-                e.stopPropagation();
-                selectMusicTrack(option);
-            });
-        });
-
-        // ── Event: Close dropdown on outside click ──
-        document.addEventListener('click', () => {
-            els.musicDropdown.classList.remove('open');
-        });
-
-        // ── Event: Toggle Audio ──
+        // Audio toggle
         els.btnAudioToggle.addEventListener('click', () => {
             const playing = audio.toggle();
             state.audioPlaying = playing;
             els.btnAudioToggle.classList.toggle('muted', !playing);
         });
 
-        // ── Event: Volume Slider ──
+        // Volume
         els.volumeSlider.addEventListener('input', (e) => {
-            const value = e.target.value / 100;
-            audio.setVolume(value * 0.3);
+            audio.setVolume((e.target.value / 100) * 0.3);
         });
 
-        // ── Event: Mouse Parallax Effect on Arrival Scene ──
-        if (els.interactiveScene && els.parallaxContent) {
-            els.interactiveScene.addEventListener('mousemove', (e) => {
-                const rect = els.interactiveScene.getBoundingClientRect();
-                const x = e.clientX - rect.left - rect.width / 2;
-                const y = e.clientY - rect.top - rect.height / 2;
-
-                // 3D effect calculation
-                const rotateX = (y / rect.height) * -6; // degrees
-                const rotateY = (x / rect.width) * 6;
-
-                els.parallaxContent.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-            });
-
-            els.interactiveScene.addEventListener('mouseleave', () => {
-                els.parallaxContent.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-            });
-
-            // Initial state
-            els.parallaxContent.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-        }
-
-        // ── Keyboard shortcuts ──
+        // Keyboard
         document.addEventListener('keydown', (e) => {
             switch (e.key) {
                 case 'Escape':
                     if (state.currentPhase === 'slides') goBackToArrival();
-                    els.musicDropdown.classList.remove('open');
                     break;
                 case ' ':
                     if (state.currentPhase === 'video') {
@@ -516,20 +396,16 @@
                     break;
                 case 'ArrowRight':
                     if (state.currentPhase === 'slides') {
-                        const activeSlide = $('.slide.active');
-                        const next = activeSlide?.nextElementSibling;
-                        if (next && next.classList.contains('slide')) {
-                            showSlide(next.id);
-                        }
+                        const active = $('.slide.active');
+                        const next = active?.nextElementSibling;
+                        if (next && next.classList.contains('slide')) showSlide(next.id);
                     }
                     break;
                 case 'ArrowLeft':
                     if (state.currentPhase === 'slides') {
-                        const activeSlide = $('.slide.active');
-                        const prev = activeSlide?.previousElementSibling;
-                        if (prev && prev.classList.contains('slide')) {
-                            showSlide(prev.id);
-                        }
+                        const active = $('.slide.active');
+                        const prev = active?.previousElementSibling;
+                        if (prev && prev.classList.contains('slide')) showSlide(prev.id);
                     }
                     break;
                 case 'm':
@@ -541,10 +417,9 @@
             }
         });
 
-        console.log('🏛️ Terenzio — Sito inizializzato (clean UI)');
+        console.log('🏛️ Terenzio v2.0 — Inizializzato');
     }
 
-    // Avvia quando il DOM è pronto
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
